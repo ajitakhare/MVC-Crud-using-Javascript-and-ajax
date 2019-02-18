@@ -1,0 +1,183 @@
+﻿@{
+    ViewBag.Title = "Customer Crud";
+}
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add New Customer</button><br /><br />
+<table id="Customertbl" class="Display">
+    <thead>
+        <tr>
+            <th>CId</th>
+            <th>CustomerName</th>
+            <th>CustomerAddress</th>
+            <th></th>
+        </tr>
+    </thead>
+</table>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h4 class="modal-title" id="myModalLabel">Add Customer</h4>
+            </div>
+            <div class="modal-body">
+                <form id="customertbl" name="customertbl">
+                    <div class="form-group">
+                        <label for="CId">CId</label>
+                        <input type="text" class="form-control" id="CId" name="CId" placeholder="CId" disabled="disabled" />
+                    </div>
+                    <div class="form-group">
+                        <label for="CustomerName">CustomerName</label>
+                        <input type="text" class="form-control" id="CustomerName" name="CustomerName" placeholder="CustomerName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="CustomerAddress">CustomerAddress</label>
+                        <input type="text" class="form-control" id="CustomerAddress" name="CustomerAddress" placeholder="CustomerAddress" />
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnAdd" onclick="return Add();">Add</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate" style="display:none;" onclick="Update();">Update</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<link href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+@section scripts{
+    <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script>
+        // to list
+        var Popup, datatable;
+        $(document).ready(function () {
+          datatable=  $("#Customertbl").DataTable({
+                "ajax": {
+                    "url": "/Customer/GetCustomer",
+                    "type": "GET",
+                    "datatype": "json"
+                },
+                "columns": [
+                    {"data": "CId"},
+                    { "data": "CustomerName" },
+                    { "data": "CustomerAddress" },
+                      {"data": "CId" , "render" : function(data){
+                          return "<a class='btn btn-primary glyphicon glyphicon-edit' onclick= getbyId("+data+")> edit</a><a class='btn btn-danger glyphicon glyphicon-trash' onclick=Delete("+ data+")> delete</a>";
+                      },
+                      }
+                ]
+            });
+        });
+        // to insert
+        function Add()
+        {
+            if ($("#CustomerName").val() == "") {
+                alert("Please add name");
+                return;
+            }
+            if ($("#CustomerAddress").val() == "") {
+                alert("Please add Address");
+                return;
+            }
+            alert("Saving");
+
+            var formData = $("#customertbl").serialize();
+               debugger
+            $.ajax({
+                url: "@Url.Action("AddCustomer","Customer")",
+                type: "POST",
+            dataType: "json",
+            data: formData,
+            success: function (result) {
+                if (result.Success) {
+                    $('#myModal').modal('hide');
+                }
+            },
+            error: function () {
+
+            }
+        });
+        }
+        function getbyId(id)
+        {
+            $.ajax({
+                url: "/Customer/GetCustomerById/" + id,
+                typr: "GET",
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                success: function (result) {
+                    $('#CId').val(result.CId);
+                    $('#CustomerName').val(result.CustomerName);
+                    $('#CustomerAddress').val(result.CustomerAddress);
+                    $('#myModal').modal('show');
+                    $('#btnUpdate').show();
+                    $('#btnAdd').hide();
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+            return false;
+        }
+        // to update
+        function Update()
+        {
+            if ($("#CustomerName").val() == "") {
+                alert("Please add name");
+                return;
+            }
+            if ($("#CustomerAddress").val() == "") {
+                alert("Please add Address");
+                return;
+            }
+            var custObj = {
+                CId: $('#CId').val(),
+                CustomerName: $('#CustomerName').val(),
+                CustomerAddress: $('#CustomerAddress').val(),
+            };
+            debugger
+            $.ajax({
+                url: "/Customer/UpdateCustomer",
+                data: JSON.stringify(custObj),
+                type: "POST",
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    loadData();
+                    $('#myModal').modal('hide');
+                    $('#CId').val("");
+                    $('#CustomerName').val("");
+                    $('#CustomerAddress').val("");
+
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+        //to delete
+         function Delete(id)
+          {
+              if(confirm('are you sure to delete?'))
+              {
+                  $.ajax({
+                      type : "POST",
+                      url: '@Url.Action("DeleteCustomer","Customer")/' + id,
+                      success: function (data) {
+                          if (data.success) {
+                            //  Popup.dialog('close');
+                              dataTable.ajax.reload();
+                          }
+                      }
+
+                  });
+                  debugger
+
+              }
+          }
+    </script>
+}
+
+
+
+

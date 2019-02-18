@@ -1,0 +1,186 @@
+﻿@{
+    ViewBag.Title = "Store Crud";
+}
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add New Store</button><br /><br />
+<table id="Storetbl" class="Display">
+    <thead>
+        <tr>
+            <th>SId</th>
+            <th>StoreName</th>
+            <th>StoreAddress</th>
+            <th></th>
+        </tr>
+    </thead>
+</table>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">×</button>
+                <h4 class="modal-title" id="myModalLabel">Add Store</h4>
+            </div>
+            <div class="modal-body">
+                <form id="storetbl" name="storetbl">
+                    <div class="form-group">
+                        <label for="SId">SId</label>
+                        <input type="text" class="form-control" id="SId" name="SId" placeholder="SId" disabled="disabled" />
+                    </div>
+                    <div class="form-group">
+                        <label for="StoreName">StoreName</label>
+                        <input type="text" class="form-control" id="StoreName" name="StoreName" placeholder="StoreName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="StoreAddress">StoreAddress</label>
+                        <input type="text" class="form-control" id="StoreAddress" name="StoreAddress" placeholder="StoreAddress" />
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnAdd" onclick="return Add();">Add</button>
+                <button type="button" class="btn btn-primary" id="btnUpdate" style="display:none;" onclick="Update();">Update</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<link href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet" />
+@section scripts{
+    <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script>
+        // to list
+        var Popup, datatable;
+        $(document).ready(function () {
+          datatable=  $("#Storetbl").DataTable({
+                "ajax": {
+                    "url": "/Store/GetStore",
+                    "type": "GET",
+                    "datatype": "json"
+                },
+                "columns": [
+                    {"data": "SId"},
+                    { "data": "StoreName" },
+                    { "data": "StoreAddress" },
+                      {"data": "SId" , "render" : function(data){
+                          return "<a class='btn btn-primary glyphicon glyphicon-edit' onclick= getbyId("+data+")> edit</a><a class='btn btn-danger glyphicon glyphicon-trash' onclick=Delete("+ data+")> delete</a>";
+                      },
+                      }
+                ]
+            });
+        });
+        // to insert
+        function Add()
+        {
+            if ($("#StoreName").val() == "") {
+                alert("Please add name");
+                return;
+            }
+            if ($("#StoreAddress").val() == "") {
+                alert("Please add Address");
+                return;
+            }
+            alert("Saving");
+
+            var formData = $("#storetbl").serialize();
+               debugger
+            $.ajax({
+                url: "@Url.Action("AddStore","Store")",
+                type: "POST",
+            dataType: "json",
+            data: formData,
+            success: function (result) {
+                if (result.Success) {
+                    $('#myModal').modal('hide');
+                }
+            },
+            error: function () {
+
+            }
+        });
+        }
+        function getbyId(id)
+        {
+            $.ajax({
+                url: "/Store/GetStoreById/" + id,
+                typr: "GET",
+                contentType: "application/json;charset=UTF-8",
+                dataType: "json",
+                success: function (result) {
+                    $('#SId').val(result.SId);
+                    $('#StoreName').val(result.StoreName);
+                    $('#StoreAddress').val(result.StoreAddress);
+                    $('#myModal').modal('show');
+                    $('#btnUpdate').show();
+                    $('#btnAdd').hide();
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+            return false;
+        }
+        // to update
+        function Update()
+        {
+            if ($("#StoreName").val() == "") {
+                alert("Please add name");
+                return;
+            }
+            if ($("#StoreAddress").val() == "") {
+                alert("Please add Address");
+                return;
+            }
+            var Obj = {
+                SId: $('#SId').val(),
+                StoreName: $('#StoreName').val(),
+                StoreAddress: $('#StoreAddress').val(),
+            };
+            debugger
+            $.ajax({
+                url: "/Store/UpdateStore",
+                data: JSON.stringify(Obj),
+                type: "POST",
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    loadData();
+                    $('#myModal').modal('hide');
+                    $('#SId').val("");
+                    $('#StoreName').val("");
+                    $('#StoreAddress').val("");
+
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+        //to delete
+         function Delete(id)
+          {
+              if(confirm('are you sure to delete?'))
+              {
+                  $.ajax({
+                      type : "POST",
+                      url: '@Url.Action("DeleteStore","Store")/' + id,
+                      success: function (data) {
+                          if (data.success) {
+                            //  Popup.dialog('close');
+                              dataTable.ajax.reload();
+                          }
+                      }
+
+                  });
+                  debugger
+
+              }
+          }
+    </script>
+}
+
+
+
+
+
+
+
